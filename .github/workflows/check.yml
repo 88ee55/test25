@@ -37,7 +37,6 @@ jobs:
           echo ::set-output name=mail::$email
           echo ::set-output name=branch::$branch
 
-          exit 1
           # branch_ignore contains branch
           if [[ " ${branch_ignore[*]} " =~ " ${branch} " ]]; then
               exit 0
