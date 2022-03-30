@@ -3,6 +3,11 @@ name: check
 on:
   push:
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -60,11 +65,49 @@ jobs:
           echo "Subject: Переименуй ${{ steps.check-branch.outputs.branch }}" > template.msg
           git send-email --to=${{secrets.MAIL_USERNAME}} template.msg
 
-  work:
+  build-and-push-image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     needs: check
     if: needs.check.outputs.status == 'true'
-    steps:
-      - run: |
-          echo "next step"
 
+    steps:
+      # - name: Checkout repository
+      #   uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_PAT }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # - name: deploy
+      #   uses: wahyd4/kubectl-helm-action@master
+      #   env:
+      #     KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+      #     KUBECONFIG: /tmp/config
+      #   with:
+      #     args: |
+      #       helm repo add netology https://88ee55.github.io/netology-helm/
+      #       helm upgrade --install app -n app netology/task25 --wait --atomic --set image.tag=${{ steps.meta.outputs.version }}
