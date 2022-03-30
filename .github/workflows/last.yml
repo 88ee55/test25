@@ -1,0 +1,57 @@
+name: last commit
+
+on:
+  schedule:
+    - cron: "* */1 * * *"
+
+jobs:
+  last:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: install git-email
+        run: |
+          sudo rm /etc/apt/sources.list.d/git-core-ubuntu-ppa-focal.list
+          sudo add-apt-repository ppa:git-core/ppa
+          sudo apt-get update
+          # sudo apt-get upgrade
+          sudo apt-get install git-email -y
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check Branch
+        run: |
+          echo ${{secrets.MAIL}} | base64 -d > ~/.gitconfig
+          git config --global user.email "${{secrets.MAIL_USERNAME}}"
+          git config --global user.name "github info"
+
+          branch_raw=${{ github.ref }}
+          branch=${branch_raw#refs/heads/}
+          email=$(git log -n 1 --pretty=format:%ae)
+
+          echo "Subject: Удали или обнови ${branch}" > template.msg
+
+          ctime=$(date +%s)
+          hour=1
+          limit=$(expr 60 \* 60 \* $hour)
+
+          for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/); 
+          do
+              btime=$(git log -1 --pretty=format:%ct $branch --)
+              if [[ $ctime > $(expr $btime + $limit) ]]; then
+                  git send-email --to=${{secrets.MAIL_USERNAME}} template.msg
+              fi
+          done
+
+
+      - name: Send mail
+        if: ${{ failure() }}
+        run: |
+          echo """Subject: ${{ steps.check-branch.outputs.branch }}
+
+          ${{ github.ref }}
+          ${{ steps.check-branch.outputs.mail }}""" > template.msg
+          git send-email --to=${{secrets.MAIL_USERNAME}} template.msg
+
+

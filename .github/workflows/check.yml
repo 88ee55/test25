@@ -1,0 +1,71 @@
+name: check
+
+on:
+  push:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    outputs:
+      status: ${{ steps.check-branch.outputs.match }}
+
+    steps:
+      - name: install git-email
+        run: |
+          sudo rm /etc/apt/sources.list.d/git-core-ubuntu-ppa-focal.list
+          sudo add-apt-repository ppa:git-core/ppa
+          sudo apt-get update
+          # sudo apt-get upgrade
+          sudo apt-get install git-email -y
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check Branch
+        id: check-branch
+        run: |
+          branch_ignore=(master develop)
+          branch_raw=${{ github.ref }}
+          branch=${branch_raw#refs/heads/}
+          regex="^(feature|bugfix)/task-[0-9]+$"
+          email=$(git log -n 1 --pretty=format:%ae)
+          
+          echo ${{secrets.MAIL}} | base64 -d > ~/.gitconfig
+          git config --global user.email "${{secrets.MAIL_USERNAME}}"
+          git config --global user.name "github info"
+          echo ::set-output name=mail::$email
+          echo ::set-output name=branch::$branch
+
+          exit 1
+          # branch_ignore contains branch
+          if [[ " ${branch_ignore[*]} " =~ " ${branch} " ]]; then
+              exit 0
+          fi
+
+          if git log --merges origin/master | grep -q "${branch}$"; then
+              exit 0
+          fi
+
+          # branch regex
+          if [[ $branch =~ $regex ]]; then
+              exit 0
+          fi
+
+          echo ::set-output name=match::false
+          exit 1
+
+      - name: Send mail
+        if: ${{ failure() }}
+        run: |
+          echo "Subject: Переименуй ${{ steps.check-branch.outputs.branch }}" > template.msg
+          git send-email --to=${{secrets.MAIL_USERNAME}} template.msg
+
+  work:
+    runs-on: ubuntu-latest
+    needs: check
+    if: needs.check.outputs.status == 'true'
+    steps:
+      - run: |
+          echo "next step"
+
