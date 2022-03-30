@@ -16,14 +16,6 @@ jobs:
       status: ${{ steps.check-branch.outputs.match }}
 
     steps:
-      - name: install git-email
-        run: |
-          sudo rm /etc/apt/sources.list.d/git-core-ubuntu-ppa-focal.list
-          sudo add-apt-repository ppa:git-core/ppa
-          sudo apt-get update
-          # sudo apt-get upgrade
-          sudo apt-get install git-email -y
-
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -36,7 +28,7 @@ jobs:
           branch=${branch_raw#refs/heads/}
           regex="^(feature|bugfix)/task-[0-9]+$"
           email=$(git log -n 1 --pretty=format:%ae)
-          
+
           echo ${{secrets.MAIL}} | base64 -d > ~/.gitconfig
           git config --global user.email "${{secrets.MAIL_USERNAME}}"
           git config --global user.name "github info"
@@ -65,6 +57,12 @@ jobs:
       - name: Send mail
         if: ${{ failure() }}
         run: |
+          sudo rm /etc/apt/sources.list.d/git-core-ubuntu-ppa-focal.list
+          sudo add-apt-repository ppa:git-core/ppa
+          sudo apt-get update
+          # sudo apt-get upgrade
+          sudo apt-get install git-email -y
+
           echo "Subject: Переименуй ${{ steps.check-branch.outputs.branch }}" > template.msg
           git send-email --to=${{secrets.MAIL_USERNAME}} template.msg
 
@@ -77,8 +75,8 @@ jobs:
     if: needs.check.outputs.status == 'true'
 
     steps:
-      # - name: Checkout repository
-      #   uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Docker Buildx
         id: buildx
