@@ -114,4 +114,4 @@ jobs:
             branch_slash=${branch_raw#refs/heads/}
             branch=${branch_slash/\//-}
             helm repo add netology https://88ee55.github.io/netology-helm/
-            helm upgrade --install $branch -n $branch netology/task25 --wait --atomic --set image.tag=${{ steps.meta.outputs.version }}
+            helm upgrade --install $branch -n dev netology/test25 --wait --atomic
