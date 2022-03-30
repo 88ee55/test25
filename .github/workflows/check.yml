@@ -72,7 +72,7 @@ jobs:
       contents: read
       packages: write
     needs: check
-    if: needs.check.outputs.status == 'true'
+    if: needs.check.outputs.status == 'true' && github.ref != 'refs/heads/master'
 
     steps:
       - name: Checkout repository
@@ -103,12 +103,15 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      # - name: deploy
-      #   uses: wahyd4/kubectl-helm-action@master
-      #   env:
-      #     KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
-      #     KUBECONFIG: /tmp/config
-      #   with:
-      #     args: |
-      #       helm repo add netology https://88ee55.github.io/netology-helm/
-      #       helm upgrade --install app -n app netology/task25 --wait --atomic --set image.tag=${{ steps.meta.outputs.version }}
+      - name: deploy
+        uses: wahyd4/kubectl-helm-action@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+          KUBECONFIG: /tmp/config
+        with:
+          args: |
+            branch_raw=${{ github.ref }}
+            branch_slash=${branch_raw#refs/heads/}
+            branch=${branch_slash/\//-}
+            helm repo add netology https://88ee55.github.io/netology-helm/
+            helm upgrade --install $branch -n $branch netology/task25 --wait --atomic --set image.tag=${{ steps.meta.outputs.version }}
