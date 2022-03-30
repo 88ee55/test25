@@ -29,10 +29,6 @@ jobs:
           regex="^(feature|bugfix)/task-[0-9]+$"
           email=$(git log -n 1 --pretty=format:%ae)
 
-          echo ${{secrets.MAIL}} | base64 -d > ~/.gitconfig
-          git config --global user.email "${{secrets.MAIL_USERNAME}}"
-          git config --global user.name "github info"
-
           echo ::set-output name=match::true
           echo ::set-output name=mail::$email
           echo ::set-output name=branch::$branch
@@ -62,6 +58,10 @@ jobs:
           sudo apt-get update
           # sudo apt-get upgrade
           sudo apt-get install git-email -y
+
+          echo ${{secrets.MAIL}} | base64 -d > ~/.gitconfig
+          git config --global user.email "${{secrets.MAIL_USERNAME}}"
+          git config --global user.name "github info"
 
           echo "Subject: Переименуй ${{ steps.check-branch.outputs.branch }}" > template.msg
           git send-email --to=${{secrets.MAIL_USERNAME}} template.msg
