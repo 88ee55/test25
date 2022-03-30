@@ -30,6 +30,7 @@ jobs:
       - name: Check Branch
         id: check-branch
         run: |
+          git fetch
           branch_ignore=(master develop)
           branch_raw=${{ github.ref }}
           branch=${branch_raw#refs/heads/}
