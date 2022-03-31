@@ -64,7 +64,7 @@ jobs:
           git config --global user.name "github info"
 
           echo "Subject: Переименуй ${{ steps.check-branch.outputs.branch }}" > template.msg
-          git send-email --to=${{secrets.MAIL_USERNAME}} template.msg
+          git send-email --to=${{ steps.check-branch.outputs.mail }} template.msg
 
   build-and-push-image:
     runs-on: ubuntu-latest

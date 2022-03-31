@@ -41,18 +41,8 @@ jobs:
           do
               btime=$(git log -1 --pretty=format:%ct $branch --)
               if [[ $ctime > $(expr $btime + $limit) ]]; then
-                  git send-email --to=${{secrets.MAIL_USERNAME}} template.msg
+                  git send-email --to=${email} template.msg
               fi
           done
-
-
-      - name: Send mail
-        if: ${{ failure() }}
-        run: |
-          echo """Subject: ${{ steps.check-branch.outputs.branch }}
-
-          ${{ github.ref }}
-          ${{ steps.check-branch.outputs.mail }}""" > template.msg
-          git send-email --to=${{secrets.MAIL_USERNAME}} template.msg
 
 
