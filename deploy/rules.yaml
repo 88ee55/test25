@@ -1,0 +1,6 @@
+rules:
+  - id: delete-deploy
+    resources:
+      - "*"
+    jmespath: "contains(metadata.name, 'task-')"
+    ttl: 1h
