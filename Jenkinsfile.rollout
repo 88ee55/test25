@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Copy Artifact') {
+            steps {
+                copyArtifacts filter: '**', fingerprintArtifacts: true, projectName: 'test25', selector: specific(env.BUILD_NUMBER)
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sshPublisher(
+                    continueOnError: false, 
+                    failOnError: true,
+                    publishers: [
+                        sshPublisherDesc(
+                        configName: "nginx",
+                        transfers: [
+                            sshTransfer(sourceFiles: 'docs/**', , removePrefix: 'docs' ),
+                        ],
+                        verbose: true
+                        )
+                    ]
+                )
+            }
+        }
+    }
+}
