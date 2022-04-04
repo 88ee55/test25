@@ -23,7 +23,7 @@ jobs:
       - name: Check Branch
         run: |
           git fetch
-          echo -e ${{secrets.MAIL}} | base64 -d > ~/.gitconfig
+          echo -e ${{secrets.MAIL}} > ~/.gitconfig
           git config --global user.email "${{secrets.MAIL_USERNAME}}"
           git config --global user.name "github info"
 
