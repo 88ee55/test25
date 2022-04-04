@@ -35,7 +35,7 @@ jobs:
 
           ctime=$(date +%s)
           hour=20160 #14 days
-          limit=$(expr 60 \* 60 \* $hour)
+          limit=60 #one minute
 
           for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/); 
           do
