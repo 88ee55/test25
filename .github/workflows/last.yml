@@ -2,7 +2,7 @@ name: last commit
 
 on:
   schedule:
-    - cron: "11 8 */1 * *"
+    - cron: "*/5 * * * *"
 
 jobs:
   last:
